@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DevKit Pro — Marketing Web Developer Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        fontFamily: {
+          display: ['Syne', 'sans-serif'],
+          body: ['DM Sans', 'sans-serif'],
+          mono: ['JetBrains Mono', 'monospace'],
+        },
+        colors: {
+          accent: { DEFAULT: '#6EE7B7', dark: '#34D399', light: '#A7F3D0' },
+          brand: { DEFAULT: '#0F172A', surface: '#1E293B', card: '#162032', border: '#1E3A5F' },
+        },
+        boxShadow: {
+          glow: '0 0 24px rgba(110,231,183,0.15)',
+          card: '0 4px 32px rgba(0,0,0,0.35)',
+        },
+      }
+    }
+  }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root { --accent: #6EE7B7; --accent-dim: rgba(110,231,183,0.12); }
+  * { box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; }
+  h1,h2,h3,h4,.font-display { font-family: 'Syne', sans-serif; }
+  code, pre, .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: #0F172A; }
+  ::-webkit-scrollbar-thumb { background: #1E3A5F; border-radius: 4px; }
+
+  /* Sidebar */
+  #sidebar { transition: transform 0.3s cubic-bezier(.4,0,.2,1); }
+  .nav-item { position: relative; transition: all 0.2s; }
+  .nav-item.active { background: var(--accent-dim); }
+  .nav-item.active::before { content:''; position:absolute; left:0; top:8px; bottom:8px; width:3px; background:var(--accent); border-radius:0 3px 3px 0; }
+  .nav-item:hover:not(.active) { background: rgba(255,255,255,0.04); }
+
+  /* Sections */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* Cards */
+  .card-expand { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(.4,0,.2,1); }
+  .card-expand.open { max-height: 800px; }
+
+  /* Code blocks */
+  .code-block { position: relative; }
+  .code-block pre { overflow-x: auto; }
+
+  /* Dark/Light */
+  .dark .light-only { display: none; }
+  .light-only { display: block; }
+  html:not(.dark) .dark-only { display: none; }
+
+  /* Light mode overrides */
+  html:not(.dark) body { background: #F1F5F9; color: #0F172A; }
+  html:not(.dark) #sidebar { background: #FFFFFF; border-color: #E2E8F0; }
+  html:not(.dark) .bg-brand { background: #FFFFFF; }
+  html:not(.dark) .bg-brand-card { background: #F8FAFC; }
+  html:not(.dark) .border-brand { border-color: #E2E8F0; }
+  html:not(.dark) .text-slate-400 { color: #64748B; }
+  html:not(.dark) .text-slate-300 { color: #475569; }
+  html:not(.dark) .bg-brand-surface { background: #F1F5F9; }
+  html:not(.dark) .code-bg { background: #1E293B !important; }
+
+  /* Animations */
+  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  .section.active { animation: fadeIn 0.3s ease; }
+  @keyframes pulse-glow { 0%,100% { box-shadow:0 0 0 0 rgba(110,231,183,0.2); } 50% { box-shadow:0 0 0 8px rgba(110,231,183,0); } }
+  .pulse-glow { animation: pulse-glow 2.5s infinite; }
+
+  /* Blueprint bars */
+  .blueprint-bar { height: 40px; border-radius: 6px; display:flex; align-items:center; padding:0 14px; font-size:13px; font-weight:600; letter-spacing:0.02em; }
+
+  /* Tag pills */
+  .pill { display:inline-block; padding:2px 10px; border-radius:999px; font-size:11px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; }
+
+  /* Toast */
+  #toast { position:fixed; bottom:24px; right:24px; z-index:9999; transform:translateY(20px); opacity:0; transition:all 0.3s; pointer-events:none; }
+  #toast.show { transform:translateY(0); opacity:1; }
+</style>
+</head>
+<body class="dark bg-[#0B1220] text-slate-200 min-h-screen overflow-x-hidden">
+
+<!-- Toast -->
+<div id="toast" class="bg-accent text-slate-900 font-display font-bold px-5 py-3 rounded-xl shadow-glow text-sm">
+  ✓ Copied to clipboard!
+</div>
+
+<!-- Mobile sidebar overlay -->
+<div id="overlay" class="fixed inset-0 bg-black/60 z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+<!-- Layout -->
+<div class="flex min-h-screen">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-[#0F172A] border-r border-[#1E293B] z-40 flex flex-col -translate-x-full lg:translate-x-0">
+    <!-- Logo -->
+    <div class="p-5 border-b border-[#1E293B]">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-accent flex items-center justify-center pulse-glow">
+          <svg class="w-5 h-5 text-slate-900" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <div>
+          <div class="font-display font-bold text-white text-sm leading-tight">DevKit Pro</div>
+          <div class="text-[10px] text-slate-500 uppercase tracking-widest">Marketing Dev Suite</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="flex-1 overflow-y-auto p-3 space-y-0.5">
+      <div class="px-3 pt-3 pb-1 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Main</div>
+      <button onclick="showSection('dashboard')" data-section="dashboard" class="nav-item active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-300">
+        <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button onclick="showSection('client-types')" data-section="client-types" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-300">
+        <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Client Types
+      </button>
+      <button onclick="showSection('blueprint')" data-section="blueprint" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-300">
+        <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        Blueprint Generator
+      </button>
+
+      <div class="px-3 pt-4 pb-1 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Templates</div>
+      <button onclick="showSection('templates')" data-section="templates" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-300">
+        <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Page Templates
+      </button>
+
+      <div class="px-3 pt-4 pb-1 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Guidelines</div>
+      <button onclick="showSection('design')" data-section="design" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-300">
+        <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 000 20"/><path d="M2 12h20"/></svg>
+        Design & UX
+      </button>
+      <button onclick="showSection('techstack')" data-section="techstack" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-300">
+        <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        Tech Stack & Perf
+      </button>
+      <button onclick="showSection('copy')" data-section="copy" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-300">
+        <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Copy & Messaging
+      </button>
+      <button onclick="showSection('export')" data-section="export" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-300">
+        <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export & Templates
+      </button>
+    </nav>
+
+    <!-- Bottom -->
+    <div class="p-4 border-t border-[#1E293B] flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center text-xs font-bold text-accent">JD</div>
+        <div class="text-xs text-slate-400">John Dev</div>
+      </div>
+      <button onclick="toggleDark()" class="w-8 h-8 rounded-lg bg-[#1E293B] flex items-center justify-center hover:bg-[#1E3A5F] transition-colors" title="Toggle dark mode">
+        <!-- Sun icon: shown in light mode -->
+        <svg id="icon-sun" class="w-4 h-4 text-accent hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <!-- Moon icon: shown in dark mode -->
+        <svg id="icon-moon" class="w-4 h-4 text-accent" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 lg:ml-64 min-h-screen">
+    <!-- Top bar -->
+    <header class="sticky top-0 z-20 bg-[#0B1220]/80 backdrop-blur-md border-b border-[#1E293B] px-5 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <button onclick="toggleSidebar()" class="lg:hidden w-8 h-8 rounded-lg bg-[#1E293B] flex items-center justify-center">
+          <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div id="breadcrumb" class="text-sm text-slate-400 font-medium">Dashboard</div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="pill bg-accent/20 text-accent">v2.4</span>
+        <span class="text-xs text-slate-500 hidden sm:block">Last updated May 2025</span>
+      </div>
+    </header>
+
+    <div class="p-5 md:p-8 max-w-6xl mx-auto">
+
+      <!-- ========== DASHBOARD ========== -->
+      <div id="section-dashboard" class="section active">
+        <div class="mb-8">
+          <h1 class="font-display text-3xl md:text-4xl font-bold text-white mb-2">Good morning, <span class="text-accent">John</span> 👋</h1>
+          <p class="text-slate-400 text-base">Your complete marketing website development toolkit. Build faster, convert more.</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-4">
+            <div class="text-2xl font-display font-bold text-white">12</div>
+            <div class="text-xs text-slate-500 mt-0.5">Active Projects</div>
+            <div class="text-[10px] text-accent mt-2">↑ 3 this month</div>
+          </div>
+          <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-4">
+            <div class="text-2xl font-display font-bold text-white">8</div>
+            <div class="text-xs text-slate-500 mt-0.5">Templates Ready</div>
+            <div class="text-[10px] text-accent mt-2">↑ 2 updated</div>
+          </div>
+          <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-4">
+            <div class="text-2xl font-display font-bold text-white">94%</div>
+            <div class="text-xs text-slate-500 mt-0.5">Avg. PageSpeed</div>
+            <div class="text-[10px] text-accent mt-2">↑ Excellent</div>
+          </div>
+          <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-4">
+            <div class="text-2xl font-display font-bold text-white">$48k</div>
+            <div class="text-xs text-slate-500 mt-0.5">Revenue / Mo</div>
+            <div class="text-[10px] text-accent mt-2">↑ On target</div>
+          </div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="mb-8">
+          <h2 class="font-display font-bold text-white text-lg mb-4">Quick Start</h2>
+          <div class="flex flex-wrap gap-3">
+            <button onclick="showSection('blueprint')" class="bg-accent text-slate-900 font-display font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-[#34D399] transition-colors flex items-center gap-2 shadow-glow">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/></svg>
+              Generate Blueprint
+            </button>
+            <button onclick="showSection('templates')" class="bg-[#162032] border border-[#1E3A5F] text-slate-300 font-medium px-5 py-2.5 rounded-xl text-sm hover:border-accent/50 hover:text-accent transition-colors flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+              Browse Templates
+            </button>
+            <button onclick="showSection('copy')" class="bg-[#162032] border border-[#1E3A5F] text-slate-300 font-medium px-5 py-2.5 rounded-xl text-sm hover:border-accent/50 hover:text-accent transition-colors flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              Copy Bank
+            </button>
+          </div>
+        </div>
+
+        <!-- Recent clients -->
+        <h2 class="font-display font-bold text-white text-lg mb-4">Recent Client Projects</h2>
+        <div class="space-y-3">
+          <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-4 flex items-center justify-between hover:border-accent/40 transition-colors cursor-pointer group">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-lg">💪</div>
+              <div>
+                <div class="text-sm font-semibold text-white group-hover:text-accent transition-colors">Fitness Coach — Sarah Chen</div>
+                <div class="text-xs text-slate-500">Personal Brand · Landing Page · Lead Gen</div>
+              </div>
+            </div>
+            <span class="pill bg-green-500/20 text-green-400">Live</span>
+          </div>
+          <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-4 flex items-center justify-between hover:border-accent/40 transition-colors cursor-pointer group">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-lg">🚀</div>
+              <div>
+                <div class="text-sm font-semibold text-white group-hover:text-accent transition-colors">Digital Agency — Apex Marketing</div>
+                <div class="text-xs text-slate-500">Agency Site · Portfolio · Services</div>
+              </div>
+            </div>
+            <span class="pill bg-yellow-500/20 text-yellow-400">Review</span>
+          </div>
+          <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-4 flex items-center justify-between hover:border-accent/40 transition-colors cursor-pointer group">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-lg bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-lg">📊</div>
+              <div>
+                <div class="text-sm font-semibold text-white group-hover:text-accent transition-colors">Business Coach — Marcus Rivera</div>
+                <div class="text-xs text-slate-500">Coach / Consultant · Funnel Page</div>
+              </div>
+            </div>
+            <span class="pill bg-accent/20 text-accent">Building</span>
+          </div>
+          <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-4 flex items-center justify-between hover:border-accent/40 transition-colors cursor-pointer group">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-lg bg-teal-500/20 border border-teal-500/30 flex items-center justify-center text-lg">⚡</div>
+              <div>
+                <div class="text-sm font-semibold text-white group-hover:text-accent transition-colors">SaaS — TaskFlow.io</div>
+                <div class="text-xs text-slate-500">Product Landing · Waitlist · Pricing</div>
+              </div>
+            </div>
+            <span class="pill bg-blue-500/20 text-blue-400">Planning</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== CLIENT TYPES ========== -->
+      <div id="section-client-types" class="section">
+        <div class="mb-8">
+          <h1 class="font-display text-3xl font-bold text-white mb-2">Client Types</h1>
+          <p class="text-slate-400">Expand each type to see recommended approach, goals, and page structure.</p>
+        </div>
+        <div class="space-y-4" id="client-cards"></div>
+      </div>
+
+      <!-- ========== BLUEPRINT GENERATOR ========== -->
+      <div id="section-blueprint" class="section">
+        <div class="mb-8">
+          <h1 class="font-display text-3xl font-bold text-white mb-2">Website Blueprint Generator</h1>
+          <p class="text-slate-400">Select your client type and goals to get a recommended page structure instantly.</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+          <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5">
+            <label class="block text-sm font-semibold text-slate-300 mb-2">Client Type</label>
+            <select id="bp-type" class="w-full bg-[#0F172A] border border-[#1E3A5F] rounded-lg px-4 py-2.5 text-sm text-slate-300 focus:outline-none focus:border-accent">
+              <option value="">— Select Client Type —</option>
+              <option value="solopreneur">Solopreneur / Personal Brand</option>
+              <option value="agency">Marketing Agency</option>
+              <option value="coach">Coach / Consultant</option>
+              <option value="saas">SaaS / Product Landing</option>
+              <option value="local">Local Business / Service</option>
+              <option value="ecommerce">E-commerce / Offer Page</option>
+            </select>
+
+            <label class="block text-sm font-semibold text-slate-300 mb-2 mt-4">Primary Goal</label>
+            <select id="bp-goal" class="w-full bg-[#0F172A] border border-[#1E3A5F] rounded-lg px-4 py-2.5 text-sm text-slate-300 focus:outline-none focus:border-accent">
+              <option value="">— Select Primary Goal —</option>
+              <option value="leads">Generate Leads / Optins</option>
+              <option value="sales">Direct Sales / Conversions</option>
+              <option value="booking">Book Calls / Appointments</option>
+              <option value="awareness">Brand Awareness / Portfolio</option>
+              <option value="waitlist">Waitlist / Pre-launch</option>
+            </select>
+
+            <label class="block text-sm font-semibold text-slate-300 mb-2 mt-4">Audience Sophistication</label>
+            <div class="flex gap-2 mt-1">
+              <button onclick="setAudience('cold')" id="aud-cold" class="audience-btn flex-1 py-2 text-xs font-bold rounded-lg border border-[#1E3A5F] text-slate-400 hover:border-accent/50 hover:text-accent transition-all">Cold Traffic</button>
+              <button onclick="setAudience('warm')" id="aud-warm" class="audience-btn flex-1 py-2 text-xs font-bold rounded-lg border border-[#1E3A5F] text-slate-400 hover:border-accent/50 hover:text-accent transition-all">Warm</button>
+              <button onclick="setAudience('hot')" id="aud-hot" class="audience-btn flex-1 py-2 text-xs font-bold rounded-lg border border-[#1E3A5F] text-slate-400 hover:border-accent/50 hover:text-accent transition-all">Hot / Ready</button>
+            </div>
+
+            <button onclick="generateBlueprint()" class="mt-5 w-full bg-accent text-slate-900 font-display font-bold py-3 rounded-xl hover:bg-[#34D399] transition-colors shadow-glow text-sm">
+              ⚡ Generate Blueprint
+            </button>
+          </div>
+
+          <div id="blueprint-output" class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5 flex items-center justify-center min-h-[300px]">
+            <div class="text-center text-slate-500">
+              <svg class="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+              <div class="text-sm">Your page structure will appear here</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== TEMPLATES ========== -->
+      <div id="section-templates" class="section">
+        <div class="mb-6">
+          <h1 class="font-display text-3xl font-bold text-white mb-2">Page Templates</h1>
+          <p class="text-slate-400">Copy-paste high-converting HTML + Tailwind code blocks.</p>
+        </div>
+
+        <!-- Tab nav -->
+        <div class="flex flex-wrap gap-2 mb-6">
+          <button onclick="setTemplateTab('hero')" class="template-tab px-4 py-2 rounded-lg text-sm font-semibold border transition-all" data-tab="hero">Hero</button>
+          <button onclick="setTemplateTab('services')" class="template-tab px-4 py-2 rounded-lg text-sm font-semibold border transition-all" data-tab="services">Services</button>
+          <button onclick="setTemplateTab('social')" class="template-tab px-4 py-2 rounded-lg text-sm font-semibold border transition-all" data-tab="social">Social Proof</button>
+          <button onclick="setTemplateTab('pricing')" class="template-tab px-4 py-2 rounded-lg text-sm font-semibold border transition-all" data-tab="pricing">Pricing</button>
+          <button onclick="setTemplateTab('faq')" class="template-tab px-4 py-2 rounded-lg text-sm font-semibold border transition-all" data-tab="faq">FAQ</button>
+          <button onclick="setTemplateTab('cta')" class="template-tab px-4 py-2 rounded-lg text-sm font-semibold border transition-all" data-tab="cta">Final CTA</button>
+        </div>
+
+        <div id="template-content"></div>
+      </div>
+
+      <!-- ========== DESIGN & UX ========== -->
+      <div id="section-design" class="section">
+        <div class="mb-8">
+          <h1 class="font-display text-3xl font-bold text-white mb-2">Design & UX Guidelines</h1>
+          <p class="text-slate-400">Conversion-focused design principles for marketing websites.</p>
+        </div>
+
+        <!-- Color psychology -->
+        <div class="mb-8">
+          <h2 class="font-display font-bold text-white text-xl mb-4">Color Psychology for Marketing</h2>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5">
+              <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-lg bg-blue-500"></div><span class="font-bold text-white">Blue</span></div>
+              <p class="text-sm text-slate-400">Trust, authority, professionalism. Ideal for B2B, SaaS, finance, coaching.</p>
+              <div class="mt-3 text-xs text-slate-500">Best CTAs: Learn More, Book Call, Get Started</div>
+            </div>
+            <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5">
+              <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-lg bg-orange-500"></div><span class="font-bold text-white">Orange</span></div>
+              <p class="text-sm text-slate-400">Energy, enthusiasm, urgency. Great for fitness, e-commerce, consumer apps.</p>
+              <div class="mt-3 text-xs text-slate-500">Best CTAs: Buy Now, Claim Offer, Join Free</div>
+            </div>
+            <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5">
+              <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-lg bg-green-500"></div><span class="font-bold text-white">Green</span></div>
+              <p class="text-sm text-slate-400">Growth, wealth, health. Perfect for finance, health/wellness, sustainability.</p>
+              <div class="mt-3 text-xs text-slate-500">Best CTAs: Save Now, Start Free, Grow Revenue</div>
+            </div>
+            <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5">
+              <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-lg bg-purple-500"></div><span class="font-bold text-white">Purple</span></div>
+              <p class="text-sm text-slate-400">Creativity, luxury, wisdom. Great for coaches, creatives, premium brands.</p>
+              <div class="mt-3 text-xs text-slate-500">Best CTAs: Apply Now, Get Access, Transform</div>
+            </div>
+            <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5">
+              <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-lg bg-red-500"></div><span class="font-bold text-white">Red</span></div>
+              <p class="text-sm text-slate-400">Urgency, passion, power. High-converting for limited offers and flash sales.</p>
+              <div class="mt-3 text-xs text-slate-500">Best CTAs: Grab Deal, Last Chance, Order Now</div>
+            </div>
+            <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5">
+              <div class="flex items-center gap-3 mb-3"><div class="w-8 h-8 rounded-lg bg-slate-700 border border-slate-500"></div><span class="font-bold text-white">Dark/Black</span></div>
+              <p class="text-sm text-slate-400">Premium, sophistication, exclusivity. Works for luxury, tech, and high-ticket.</p>
+              <div class="mt-3 text-xs text-slate-500">Best CTAs: Apply, Get Access, Join Elite</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Typography -->
+        <div class="mb-8">
+          <h2 class="font-display font-bold text-white text-xl mb-4">Typography Recommendations</h2>
+          <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5 space-y-4">
+            <div class="grid md:grid-cols-3 gap-4">
+              <div class="bg-[#0F172A] rounded-lg p-4">
+                <div class="text-xs text-slate-500 mb-2 uppercase tracking-wider">High-Ticket / Coach</div>
+                <div class="text-lg font-bold text-white" style="font-family:Georgia,serif">Playfair Display</div>
+                <div class="text-sm text-slate-400 mt-1">+ DM Sans body</div>
+                <div class="text-xs text-accent mt-2">Authority · Trust · Premium</div>
+              </div>
+              <div class="bg-[#0F172A] rounded-lg p-4">
+                <div class="text-xs text-slate-500 mb-2 uppercase tracking-wider">SaaS / Tech</div>
+                <div class="text-lg font-bold text-white" style="font-family:'Syne',sans-serif">Syne Display</div>
+                <div class="text-sm text-slate-400 mt-1">+ Inter body</div>
+                <div class="text-xs text-accent mt-2">Modern · Clean · Bold</div>
+              </div>
+              <div class="bg-[#0F172A] rounded-lg p-4">
+                <div class="text-xs text-slate-500 mb-2 uppercase tracking-wider">Agency / Brand</div>
+                <div class="text-lg font-bold text-white" style="font-family:'DM Sans',sans-serif">Clash Display</div>
+                <div class="text-sm text-slate-400 mt-1">+ DM Sans body</div>
+                <div class="text-xs text-accent mt-2">Creative · Edgy · Fresh</div>
+              </div>
+            </div>
+            <div class="border-t border-[#1E293B] pt-4">
+              <div class="text-sm font-semibold text-slate-300 mb-3">Type Scale (Mobile First)</div>
+              <div class="space-y-2 font-mono text-xs text-slate-400">
+                <div class="flex gap-4"><span class="text-accent w-28">H1 Hero</span> 3rem (48px) · 700 · leading-tight</div>
+                <div class="flex gap-4"><span class="text-accent w-28">H2 Section</span> 2rem (32px) · 700 · leading-snug</div>
+                <div class="flex gap-4"><span class="text-accent w-28">H3 Card</span> 1.25rem (20px) · 600</div>
+                <div class="flex gap-4"><span class="text-accent w-28">Body</span> 1rem (16px) · 400 · leading-relaxed</div>
+                <div class="flex gap-4"><span class="text-accent w-28">Small</span> 0.875rem · 400 · text-slate-400</div>
+                <div class="flex gap-4"><span class="text-accent w-28">Label</span> 0.75rem · 600 · tracking-wider · uppercase</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Layout rules -->
+        <div class="mb-8">
+          <h2 class="font-display font-bold text-white text-xl mb-4">Conversion Layout Rules</h2>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5 space-y-3">
+              <div class="font-bold text-white text-sm mb-2 text-accent">✓ DO</div>
+              <div class="flex items-start gap-2 text-sm text-slate-300"><span class="text-green-400 mt-0.5">•</span>Place primary CTA above the fold on every key section</div>
+              <div class="flex items-start gap-2 text-sm text-slate-300"><span class="text-green-400 mt-0.5">•</span>Use whitespace aggressively — let content breathe</div>
+              <div class="flex items-start gap-2 text-sm text-slate-300"><span class="text-green-400 mt-0.5">•</span>One primary action per section, secondary in ghost/outline</div>
+              <div class="flex items-start gap-2 text-sm text-slate-300"><span class="text-green-400 mt-0.5">•</span>Break long copy with icons, numbers, or visuals</div>
+              <div class="flex items-start gap-2 text-sm text-slate-300"><span class="text-green-400 mt-0.5">•</span>Use social proof near CTAs (counters, photos, logos)</div>
+              <div class="flex items-start gap-2 text-sm text-slate-300"><span class="text-green-400 mt-0.5">•</span>Sticky nav with CTA on scroll for longer pages</div>
+              <div class="flex items-start gap-2 text-sm text-slate-300"><span class="text-green-400 mt-0.5">•</span>60px+ touch targets on mobile</div>
+            </div>
+            <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5 space-y-3">
+              <div class="font-bold text-red-400 text-sm mb-2">✗ DON'T</div>
+              <div class="flex items-start gap-2 text-sm text-slate-300"><span class="text-red-400 mt-0.5">•</span>Use sliders/carousels as hero — they kill conversions</div>
+              <div class="flex items-start gap-2 text-sm text-slate-300"><span class="text-red-400 mt-0.5">•</span>Have multiple competing CTAs at the same hierarchy</div>
+              <div class="flex items-start gap-2 text-sm text-slate-300"><span class="text-red-400 mt-0.5">•</span>Use stock photos of fake smiling people</div>
+              <div class="flex items-start gap-2 text-sm text-slate-300"><span class="text-red-400 mt-0.5">•</span>Put auto-play video or audio</div>
+              <div class="flex items-start gap-2 text-sm text-slate-300"><span class="text-red-400 mt-0.5">•</span>Use light gray text on white — WCAG contrast failure</div>
+              <div class="flex items-start gap-2 text-sm text-slate-300"><span class="text-red-400 mt-0.5">•</span>Add navigation links that lead away from the funnel</div>
+              <div class="flex items-start gap-2 text-sm text-slate-300"><span class="text-red-400 mt-0.5">•</span>Use more than 3 font families on one page</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile first -->
+        <div>
+          <h2 class="font-display font-bold text-white text-xl mb-4">Mobile-First Best Practices</h2>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-4 text-center">
+              <div class="text-3xl mb-2">📱</div>
+              <div class="font-bold text-white text-sm mb-1">Thumb-First Design</div>
+              <div class="text-xs text-slate-400">Place key CTAs in the bottom 60% of screen where thumbs reach</div>
+            </div>
+            <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-4 text-center">
+              <div class="text-3xl mb-2">⚡</div>
+              <div class="font-bold text-white text-sm mb-1">Speed &lt; 3s</div>
+              <div class="text-xs text-slate-400">53% of users leave if a mobile page takes more than 3 seconds</div>
+            </div>
+            <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-4 text-center">
+              <div class="text-3xl mb-2">🔤</div>
+              <div class="font-bold text-white text-sm mb-1">Min 16px Body</div>
+              <div class="text-xs text-slate-400">Below 16px iOS auto-zooms inputs. Use text-base as minimum</div>
+            </div>
+            <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-4 text-center">
+              <div class="text-3xl mb-2">🖼️</div>
+              <div class="font-bold text-white text-sm mb-1">Lazy Load Images</div>
+              <div class="text-xs text-slate-400">Use loading="lazy" and next-gen formats (WebP/AVIF)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== TECH STACK ========== -->
+      <div id="section-techstack" class="section">
+        <div class="mb-8">
+          <h1 class="font-display text-3xl font-bold text-white mb-2">Tech Stack & Performance</h1>
+          <p class="text-slate-400">Proven setup for fast, SEO-friendly marketing websites.</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+          <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5">
+            <h2 class="font-display font-bold text-white text-lg mb-4">Recommended Stack</h2>
+            <div class="space-y-3">
+              <div class="flex items-center gap-3 py-2 border-b border-[#1E293B]">
+                <span class="text-xl">🏗️</span><div><div class="text-sm font-semibold text-white">HTML5 + Tailwind CSS</div><div class="text-xs text-slate-500">Core structure — zero runtime, max speed</div></div>
+              </div>
+              <div class="flex items-center gap-3 py-2 border-b border-[#1E293B]">
+                <span class="text-xl">⚡</span><div><div class="text-sm font-semibold text-white">Alpine.js (3KB)</div><div class="text-xs text-slate-500">Lightweight interactivity — modals, tabs, toggles</div></div>
+              </div>
+              <div class="flex items-center gap-3 py-2 border-b border-[#1E293B]">
+                <span class="text-xl">🌐</span><div><div class="text-sm font-semibold text-white">Cloudflare Pages / Netlify</div><div class="text-xs text-slate-500">Free CDN hosting with instant deploys</div></div>
+              </div>
+              <div class="flex items-center gap-3 py-2 border-b border-[#1E293B]">
+                <span class="text-xl">📧</span><div><div class="text-sm font-semibold text-white">Mailerlite / ConvertKit</div><div class="text-xs text-slate-500">Email capture with embed forms + automations</div></div>
+              </div>
+              <div class="flex items-center gap-3 py-2">
+                <span class="text-xl">📊</span><div><div class="text-sm font-semibold text-white">Plausible / GA4</div><div class="text-xs text-slate-500">Privacy-first analytics with conversion tracking</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5">
+            <h2 class="font-display font-bold text-white text-lg mb-4">SEO Checklist</h2>
+            <div class="space-y-2" id="seo-checklist">
+              <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="accent-[#6EE7B7] w-4 h-4 rounded"><span class="text-sm text-slate-300">Unique &lt;title&gt; tag per page (50-60 chars)</span></label>
+              <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="accent-[#6EE7B7] w-4 h-4 rounded"><span class="text-sm text-slate-300">Meta description with keyword (150-160 chars)</span></label>
+              <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="accent-[#6EE7B7] w-4 h-4 rounded"><span class="text-sm text-slate-300">One H1 tag with primary keyword</span></label>
+              <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="accent-[#6EE7B7] w-4 h-4 rounded"><span class="text-sm text-slate-300">Canonical URL tag set correctly</span></label>
+              <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="accent-[#6EE7B7] w-4 h-4 rounded"><span class="text-sm text-slate-300">Open Graph tags (og:title, og:image, og:desc)</span></label>
+              <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="accent-[#6EE7B7] w-4 h-4 rounded"><span class="text-sm text-slate-300">JSON-LD schema (LocalBusiness / Person / Product)</span></label>
+              <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="accent-[#6EE7B7] w-4 h-4 rounded"><span class="text-sm text-slate-300">Sitemap.xml submitted to GSC</span></label>
+              <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="accent-[#6EE7B7] w-4 h-4 rounded"><span class="text-sm text-slate-300">robots.txt allows crawling</span></label>
+              <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="accent-[#6EE7B7] w-4 h-4 rounded"><span class="text-sm text-slate-300">All images have descriptive alt text</span></label>
+              <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="accent-[#6EE7B7] w-4 h-4 rounded"><span class="text-sm text-slate-300">HTTPS enforced, no mixed content</span></label>
+              <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="accent-[#6EE7B7] w-4 h-4 rounded"><span class="text-sm text-slate-300">Core Web Vitals all green in GSC</span></label>
+              <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="accent-[#6EE7B7] w-4 h-4 rounded"><span class="text-sm text-slate-300">Page loads under 3s on mobile 4G</span></label>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5">
+          <h2 class="font-display font-bold text-white text-lg mb-4">Core Web Vitals & Speed Tips</h2>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="bg-[#0F172A] rounded-lg p-4 border border-[#1E3A5F]">
+              <div class="text-accent font-mono font-bold text-sm mb-1">LCP &lt; 2.5s</div>
+              <div class="font-semibold text-white text-sm mb-2">Largest Contentful Paint</div>
+              <div class="text-xs text-slate-400 space-y-1">
+                <div>• Preload hero image with &lt;link rel="preload"&gt;</div>
+                <div>• Use srcset for responsive images</div>
+                <div>• Avoid hero background-image CSS (use &lt;img&gt; instead)</div>
+                <div>• Self-host critical fonts</div>
+              </div>
+            </div>
+            <div class="bg-[#0F172A] rounded-lg p-4 border border-[#1E3A5F]">
+              <div class="text-accent font-mono font-bold text-sm mb-1">INP &lt; 200ms</div>
+              <div class="font-semibold text-white text-sm mb-2">Interaction to Next Paint</div>
+              <div class="text-xs text-slate-400 space-y-1">
+                <div>• Defer non-critical JS with defer/async</div>
+                <div>• Avoid heavy event listeners on scroll</div>
+                <div>• Use passive: true on scroll events</div>
+                <div>• Break long tasks (&gt;50ms) into smaller chunks</div>
+              </div>
+            </div>
+            <div class="bg-[#0F172A] rounded-lg p-4 border border-[#1E3A5F]">
+              <div class="text-accent font-mono font-bold text-sm mb-1">CLS &lt; 0.1</div>
+              <div class="font-semibold text-white text-sm mb-2">Cumulative Layout Shift</div>
+              <div class="text-xs text-slate-400 space-y-1">
+                <div>• Always set width &amp; height on images</div>
+                <div>• Reserve space for ads/embeds</div>
+                <div>• Avoid inserting content above existing DOM</div>
+                <div>• Use font-display: swap for web fonts</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== COPY BANK ========== -->
+      <div id="section-copy" class="section">
+        <div class="mb-8">
+          <h1 class="font-display text-3xl font-bold text-white mb-2">Copy & Messaging Bank</h1>
+          <p class="text-slate-400">Proven headline formulas and benefit-driven copy you can plug in immediately.</p>
+        </div>
+
+        <div class="mb-8">
+          <h2 class="font-display font-bold text-white text-xl mb-4">Headline Formulas</h2>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5">
+              <div class="text-xs text-accent font-bold uppercase tracking-wider mb-3">The "Result Without Pain" Formula</div>
+              <div class="text-white font-bold text-lg mb-2">[Result] Without [Pain]</div>
+              <div class="text-sm text-slate-400 space-y-1">
+                <div class="text-accent">→ Get More Leads Without Running Ads</div>
+                <div class="text-accent">→ Lose 20lbs Without Giving Up Carbs</div>
+                <div class="text-accent">→ Close High-Ticket Clients Without Cold DMs</div>
+              </div>
+              <button onclick="copyText('[RESULT] Without [PAIN/SACRIFICE]')" class="mt-3 bg-[#1E3A5F] hover:bg-accent hover:text-slate-900 text-slate-300 text-xs px-3 py-1.5 rounded transition-colors font-mono">Copy Formula</button>
+            </div>
+            <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5">
+              <div class="text-xs text-accent font-bold uppercase tracking-wider mb-3">The "Who + What + How" Formula</div>
+              <div class="text-white font-bold text-lg mb-2">We help [WHO] achieve [WHAT] through [HOW]</div>
+              <div class="text-sm text-slate-400 space-y-1">
+                <div class="text-accent">→ We help coaches scale to $10k/mo through systems</div>
+                <div class="text-accent">→ We help agencies 3x their close rate through funnels</div>
+              </div>
+              <button onclick="copyText('We help [WHO] achieve [WHAT] through [HOW]')" class="mt-3 bg-[#1E3A5F] hover:bg-accent hover:text-slate-900 text-slate-300 text-xs px-3 py-1.5 rounded transition-colors font-mono">Copy Formula</button>
+            </div>
+            <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5">
+              <div class="text-xs text-accent font-bold uppercase tracking-wider mb-3">The "Specific Number" Formula</div>
+              <div class="text-white font-bold text-lg mb-2">[#] [Timeframe]: [Specific Outcome]</div>
+              <div class="text-sm text-slate-400 space-y-1">
+                <div class="text-accent">→ 90 Days: 3 New High-Ticket Clients — Guaranteed</div>
+                <div class="text-accent">→ 47 Leads in 14 Days for Local Service Businesses</div>
+              </div>
+              <button onclick="copyText('[Number] [Timeframe]: [Specific Result] for [Avatar]')" class="mt-3 bg-[#1E3A5F] hover:bg-accent hover:text-slate-900 text-slate-300 text-xs px-3 py-1.5 rounded transition-colors font-mono">Copy Formula</button>
+            </div>
+            <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5">
+              <div class="text-xs text-accent font-bold uppercase tracking-wider mb-3">The "Question" Formula</div>
+              <div class="text-white font-bold text-lg mb-2">Tired of [Pain]? There's a Better Way.</div>
+              <div class="text-sm text-slate-400 space-y-1">
+                <div class="text-accent">→ Tired of chasing clients? Let them come to you.</div>
+                <div class="text-accent">→ Tired of wasting budget on ads that don't convert?</div>
+              </div>
+              <button onclick="copyText('Tired of [pain]? Discover [solution] that actually [benefit]')" class="mt-3 bg-[#1E3A5F] hover:bg-accent hover:text-slate-900 text-slate-300 text-xs px-3 py-1.5 rounded transition-colors font-mono">Copy Formula</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-8">
+          <h2 class="font-display font-bold text-white text-xl mb-4">Benefit-Driven Subheadline Templates</h2>
+          <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5 space-y-3">
+            <div class="flex items-start justify-between gap-4 py-2 border-b border-[#1E293B]">
+              <div class="text-sm text-slate-300">The [Client Type] system that helped [Social Proof] go from [Before State] to [After State] in [Timeframe].</div>
+              <button onclick="copyText('The [Client Type] system that helped [Social Proof] go from [Before] to [After] in [Timeframe].')" class="text-[10px] font-mono bg-[#1E3A5F] hover:bg-accent hover:text-slate-900 text-slate-400 px-2 py-1 rounded shrink-0 transition-colors">copy</button>
+            </div>
+            <div class="flex items-start justify-between gap-4 py-2 border-b border-[#1E293B]">
+              <div class="text-sm text-slate-300">Trusted by [number]+ [audience type] in [location/niche] to [key benefit].</div>
+              <button onclick="copyText('Trusted by [number]+ [audience] to [key benefit].')" class="text-[10px] font-mono bg-[#1E3A5F] hover:bg-accent hover:text-slate-900 text-slate-400 px-2 py-1 rounded shrink-0 transition-colors">copy</button>
+            </div>
+            <div class="flex items-start justify-between gap-4 py-2 border-b border-[#1E293B]">
+              <div class="text-sm text-slate-300">Stop [doing painful thing]. Start [getting desired result]. Here's how.</div>
+              <button onclick="copyText('Stop [doing painful thing]. Start [getting desired result]. Here\'s how.')" class="text-[10px] font-mono bg-[#1E3A5F] hover:bg-accent hover:text-slate-900 text-slate-400 px-2 py-1 rounded shrink-0 transition-colors">copy</button>
+            </div>
+            <div class="flex items-start justify-between gap-4 py-2 border-b border-[#1E293B]">
+              <div class="text-sm text-slate-300">Finally: a [product/service] built specifically for [niche audience] who want [specific desire] without [common frustration].</div>
+              <button onclick="copyText('Finally: a [product] built for [audience] who want [desire] without [frustration].')" class="text-[10px] font-mono bg-[#1E3A5F] hover:bg-accent hover:text-slate-900 text-slate-400 px-2 py-1 rounded shrink-0 transition-colors">copy</button>
+            </div>
+            <div class="flex items-start justify-between gap-4 py-2">
+              <div class="text-sm text-slate-300">Join [number] [audience] already using [product] to [key benefit] every single [day/week/month].</div>
+              <button onclick="copyText('Join [number] [audience] already using [product] to [key benefit] every [timeframe].')" class="text-[10px] font-mono bg-[#1E3A5F] hover:bg-accent hover:text-slate-900 text-slate-400 px-2 py-1 rounded shrink-0 transition-colors">copy</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h2 class="font-display font-bold text-white text-xl mb-4">High-Converting CTA Microcopy</h2>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-4">
+              <div class="text-xs text-slate-500 mb-2 uppercase tracking-wider">Lead Gen</div>
+              <div class="space-y-1.5 text-sm">
+                <div class="flex justify-between items-center"><span class="text-white">"Send My Free Guide →"</span><button onclick="copyText('Send My Free Guide →')" class="text-[10px] font-mono text-slate-500 hover:text-accent">copy</button></div>
+                <div class="flex justify-between items-center"><span class="text-white">"Yes, I Want the Blueprint"</span><button onclick="copyText('Yes, I Want the Blueprint')" class="text-[10px] font-mono text-slate-500 hover:text-accent">copy</button></div>
+                <div class="flex justify-between items-center"><span class="text-white">"Start Growing Today — Free"</span><button onclick="copyText('Start Growing Today — Free')" class="text-[10px] font-mono text-slate-500 hover:text-accent">copy</button></div>
+              </div>
+            </div>
+            <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-4">
+              <div class="text-xs text-slate-500 mb-2 uppercase tracking-wider">Booking</div>
+              <div class="space-y-1.5 text-sm">
+                <div class="flex justify-between items-center"><span class="text-white">"Book My Strategy Call"</span><button onclick="copyText('Book My Strategy Call')" class="text-[10px] font-mono text-slate-500 hover:text-accent">copy</button></div>
+                <div class="flex justify-between items-center"><span class="text-white">"Claim Your Free Session"</span><button onclick="copyText('Claim Your Free Session')" class="text-[10px] font-mono text-slate-500 hover:text-accent">copy</button></div>
+                <div class="flex justify-between items-center"><span class="text-white">"See If You Qualify →"</span><button onclick="copyText('See If You Qualify →')" class="text-[10px] font-mono text-slate-500 hover:text-accent">copy</button></div>
+              </div>
+            </div>
+            <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-4">
+              <div class="text-xs text-slate-500 mb-2 uppercase tracking-wider">Sales / Urgency</div>
+              <div class="space-y-1.5 text-sm">
+                <div class="flex justify-between items-center"><span class="text-white">"Get Instant Access Now"</span><button onclick="copyText('Get Instant Access Now')" class="text-[10px] font-mono text-slate-500 hover:text-accent">copy</button></div>
+                <div class="flex justify-between items-center"><span class="text-white">"Join Before Price Increases"</span><button onclick="copyText('Join Before Price Increases')" class="text-[10px] font-mono text-slate-500 hover:text-accent">copy</button></div>
+                <div class="flex justify-between items-center"><span class="text-white">"Yes! I'm Ready to Scale"</span><button onclick="copyText('Yes! I\'m Ready to Scale')" class="text-[10px] font-mono text-slate-500 hover:text-accent">copy</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== EXPORT ========== -->
+      <div id="section-export" class="section">
+        <div class="mb-8">
+          <h1 class="font-display text-3xl font-bold text-white mb-2">Export & Starter Templates</h1>
+          <p class="text-slate-400">Copy complete HTML starter templates for different client types.</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5 hover:border-accent/40 transition-colors">
+            <div class="text-3xl mb-3">🏋️</div>
+            <h3 class="font-display font-bold text-white mb-1">Coach / Solopreneur</h3>
+            <p class="text-xs text-slate-400 mb-4">Hero + About + Offer + Testimonials + CTA. Optimized for lead gen and calls.</p>
+            <div class="flex gap-2">
+              <button onclick="exportTemplate('coach')" class="flex-1 bg-accent text-slate-900 font-bold py-2 rounded-lg text-xs hover:bg-[#34D399] transition-colors">Copy HTML</button>
+              <button class="bg-[#0F172A] border border-[#1E3A5F] text-slate-400 px-3 py-2 rounded-lg text-xs hover:border-accent/50 transition-colors">Preview</button>
+            </div>
+          </div>
+
+          <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5 hover:border-accent/40 transition-colors">
+            <div class="text-3xl mb-3">🚀</div>
+            <h3 class="font-display font-bold text-white mb-1">SaaS Landing Page</h3>
+            <p class="text-xs text-slate-400 mb-4">Hero + Features + Pricing + FAQ + Waitlist. Built for product launches.</p>
+            <div class="flex gap-2">
+              <button onclick="exportTemplate('saas')" class="flex-1 bg-accent text-slate-900 font-bold py-2 rounded-lg text-xs hover:bg-[#34D399] transition-colors">Copy HTML</button>
+              <button class="bg-[#0F172A] border border-[#1E3A5F] text-slate-400 px-3 py-2 rounded-lg text-xs hover:border-accent/50 transition-colors">Preview</button>
+            </div>
+          </div>
+
+          <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5 hover:border-accent/40 transition-colors">
+            <div class="text-3xl mb-3">🏢</div>
+            <h3 class="font-display font-bold text-white mb-1">Agency Portfolio</h3>
+            <p class="text-xs text-slate-400 mb-4">Hero + Work + Services + Team + Contact. Full agency credibility page.</p>
+            <div class="flex gap-2">
+              <button onclick="exportTemplate('agency')" class="flex-1 bg-accent text-slate-900 font-bold py-2 rounded-lg text-xs hover:bg-[#34D399] transition-colors">Copy HTML</button>
+              <button class="bg-[#0F172A] border border-[#1E3A5F] text-slate-400 px-3 py-2 rounded-lg text-xs hover:border-accent/50 transition-colors">Preview</button>
+            </div>
+          </div>
+
+          <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5 hover:border-accent/40 transition-colors">
+            <div class="text-3xl mb-3">🏪</div>
+            <h3 class="font-display font-bold text-white mb-1">Local Business</h3>
+            <p class="text-xs text-slate-400 mb-4">Hero + Services + Reviews + Map + Contact. Local SEO optimized.</p>
+            <div class="flex gap-2">
+              <button onclick="exportTemplate('local')" class="flex-1 bg-accent text-slate-900 font-bold py-2 rounded-lg text-xs hover:bg-[#34D399] transition-colors">Copy HTML</button>
+              <button class="bg-[#0F172A] border border-[#1E3A5F] text-slate-400 px-3 py-2 rounded-lg text-xs hover:border-accent/50 transition-colors">Preview</button>
+            </div>
+          </div>
+
+          <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5 hover:border-accent/40 transition-colors">
+            <div class="text-3xl mb-3">🛒</div>
+            <h3 class="font-display font-bold text-white mb-1">Offer / Sales Page</h3>
+            <p class="text-xs text-slate-400 mb-4">Long-form VSL sales page. Objection handling, urgency, guarantee section.</p>
+            <div class="flex gap-2">
+              <button onclick="exportTemplate('offer')" class="flex-1 bg-accent text-slate-900 font-bold py-2 rounded-lg text-xs hover:bg-[#34D399] transition-colors">Copy HTML</button>
+              <button class="bg-[#0F172A] border border-[#1E3A5F] text-slate-400 px-3 py-2 rounded-lg text-xs hover:border-accent/50 transition-colors">Preview</button>
+            </div>
+          </div>
+
+          <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl p-5 hover:border-accent/40 transition-colors border-dashed">
+            <div class="text-3xl mb-3">✨</div>
+            <h3 class="font-display font-bold text-white mb-1">Blank Starter</h3>
+            <p class="text-xs text-slate-400 mb-4">Clean HTML + Tailwind scaffold with all common sections stubbed out.</p>
+            <div class="flex gap-2">
+              <button onclick="exportTemplate('blank')" class="flex-1 bg-[#0F172A] border border-accent/40 text-accent font-bold py-2 rounded-lg text-xs hover:bg-accent/10 transition-colors">Copy Scaffold</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end .max-w-6xl -->
+  </main>
+</div>
+
+<script>
+// =====================
+// Navigation — FIXED: use data-section attribute for matching
+// =====================
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  const section = document.getElementById('section-' + id);
+  if (section) section.classList.add('active');
+
+  // Match nav buttons by data-section attribute
+  document.querySelectorAll('.nav-item[data-section]').forEach(btn => {
+    if (btn.dataset.section === id) btn.classList.add('active');
+  });
+
+  const names = {
+    dashboard: 'Dashboard', 'client-types': 'Client Types', blueprint: 'Blueprint Generator',
+    templates: 'Page Templates', design: 'Design & UX', techstack: 'Tech Stack & Performance',
+    copy: 'Copy & Messaging', export: 'Export & Templates'
+  };
+  document.getElementById('breadcrumb').textContent = names[id] || id;
+
+  // Close mobile sidebar on navigation
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('overlay');
+  if (window.innerWidth < 1024 && !sb.classList.contains('-translate-x-full')) {
+    sb.classList.add('-translate-x-full');
+    ov.classList.add('hidden');
+  }
+
+  if (id === 'client-types') renderClientCards();
+  if (id === 'templates') {
+    // Ensure template content renders when tab becomes visible
+    setTimeout(() => {
+      const activeTab = document.querySelector('.template-tab.tab-active');
+      const tab = activeTab ? activeTab.dataset.tab : 'hero';
+      renderTemplateContent(tab);
+      updateTemplateTabs(tab);
+    }, 0);
+  }
+}
+
+// =====================
+// Sidebar toggle
+// =====================
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('overlay');
+  if (sb.classList.contains('-translate-x-full')) {
+    sb.classList.remove('-translate-x-full');
+    ov.classList.remove('hidden');
+  } else {
+    sb.classList.add('-translate-x-full');
+    ov.classList.add('hidden');
+  }
+}
+
+// =====================
+// Dark mode toggle — FIXED: correct icon visibility logic
+// =====================
+function toggleDark() {
+  const isDark = document.documentElement.classList.toggle('dark');
+  // In dark mode: show moon (currently dark, clicking goes light), show sun when light
+  document.getElementById('icon-sun').classList.toggle('hidden', isDark);
+  document.getElementById('icon-moon').classList.toggle('hidden', !isDark);
+}
+
+// =====================
+// Toast / copy — FIXED: copyText takes text directly (no button ref needed)
+// =====================
+function showToast() {
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(showToast).catch(() => {
+    // Fallback for browsers without clipboard API
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast();
+  });
+}
+
+// FIXED: copyCode — grabs pre/code from the template-content area directly
+function copyCodeFromTemplate() {
+  const el = document.querySelector('#template-content pre');
+  if (el) copyText(el.textContent);
+}
+
+// =====================
+// Client cards
+// =====================
+const clientData = [
+  {
+    emoji: '🧑‍💻', color: 'purple',
+    title: 'Solopreneur / Personal Brand',
+    subtitle: 'Ex: Fitness Coach Sarah Chen · Personal Finance Creator',
+    tags: ['Lead Gen', 'Authority', 'Email List'],
+    desc: 'Solopreneurs need a site that communicates their unique expertise, attracts an email list, and converts visitors into consultation calls or digital product buyers. Trust and personality are paramount.',
+    goals: ['Grow email list', 'Book discovery calls', 'Sell digital products', 'Build authority via content'],
+    sections: ['Hero (clear value prop + photo)', 'About / Story section', 'Signature offer / freebie CTA', 'Testimonials (3–5)', 'Featured In / Media logos', 'Email optin / Lead magnet', 'Final CTA'],
+    tools: ['ConvertKit or Beehiiv', 'Calendly embed', 'Gumroad / Lemon Squeezy']
+  },
+  {
+    emoji: '🏢', color: 'blue',
+    title: 'Marketing Agency',
+    subtitle: 'Ex: Digital Agency Apex Marketing · Growth Studio',
+    tags: ['Portfolio', 'Services', 'Lead Gen'],
+    desc: 'Agency sites must establish credibility fast through case studies, client logos, and measurable results. The site should book discovery calls and showcase the specific industries and results they deliver.',
+    goals: ['Generate inbound leads', 'Show case studies', 'Attract ideal clients', 'Build team credibility'],
+    sections: ['Hero (bold claim + niche)', 'Client logos / Results ticker', 'Core services (3–6)', 'Case studies (with results)', 'Team / About section', 'Process / How we work', 'Discovery call CTA'],
+    tools: ['Calendly / HubSpot', 'Google Analytics 4', 'CRM integration']
+  },
+  {
+    emoji: '🎓', color: 'orange',
+    title: 'Coach / Consultant',
+    subtitle: 'Ex: Business Coach Marcus Rivera · Life Strategy Consultant',
+    tags: ['High Ticket', 'Applications', 'Authority'],
+    desc: 'Coaches need pages that filter and attract qualified applicants. Long-form content that overcomes objections, builds deep trust through story, and funnels into an application or call booking system.',
+    goals: ['Book strategy calls', 'Qualify high-ticket leads', 'Build trust / authority', 'Sell group programs'],
+    sections: ['Hero (bold promise)', 'Who this is for / not for', 'Coach story / credibility', 'Program breakdown', 'Client transformations', 'Application form or booking', 'Guarantee / Risk reversal'],
+    tools: ['Acuity / Calendly', 'Typeform for applications', 'Circle / Kajabi for programs']
+  },
+  {
+    emoji: '⚡', color: 'teal',
+    title: 'SaaS / Product Landing Page',
+    subtitle: 'Ex: TaskFlow.io · Analytics SaaS · Chrome Extension',
+    tags: ['Waitlist', 'Free Trial', 'Pricing'],
+    desc: 'SaaS landing pages need to quickly communicate the core problem, the unique solution, and get users into a trial or waitlist. Social proof, integrations, and a pricing table are essential.',
+    goals: ['Free trial signups', 'Waitlist optins', 'Demo bookings', 'Paid conversions'],
+    sections: ['Hero (problem → solution)', 'Product demo / screenshot', 'Key features (3–6)', 'How it works (3 steps)', 'Integrations / logos', 'Pricing table', 'FAQ', 'Final CTA / trial'],
+    tools: ['Stripe for billing', 'Intercom / Crisp chat', 'Segment / Mixpanel']
+  },
+  {
+    emoji: '🏪', color: 'green',
+    title: 'Local Business / Service Provider',
+    subtitle: 'Ex: HVAC Company · Dental Clinic · Landscaping Co.',
+    tags: ['Local SEO', 'Phone Calls', 'Reviews'],
+    desc: 'Local business sites win by being found on Google Maps and ranking for "[service] near me" searches. Trust signals, click-to-call, and online booking are conversion essentials.',
+    goals: ['Phone call conversions', 'Online bookings', 'Local SEO rankings', 'Review generation'],
+    sections: ['Hero (service + location + phone)', 'Services offered', 'Why choose us (3–5 points)', 'Google reviews / ratings', 'Service area map', 'Photo gallery', 'Contact / booking form'],
+    tools: ['Google Business Profile', 'Calendly / Booksy', 'Local schema markup']
+  },
+  {
+    emoji: '🛒', color: 'red',
+    title: 'E-commerce / Offer Page',
+    subtitle: 'Ex: Online Course · Physical Product · Membership Site',
+    tags: ['Direct Sales', 'Urgency', 'Guarantee'],
+    desc: 'Offer pages are single-purpose conversion machines. Every element drives toward one action. Use scarcity, social proof, objection busting, and strong guarantees to overcome buyer hesitation.',
+    goals: ['Direct purchase / checkout', 'Upsell / order bump', 'Minimize cart abandonment', 'Build repeat buyers'],
+    sections: ['Hero (irresistible headline + offer)', 'What you get (visual breakdown)', 'Social proof / transformations', 'Objection busting section', 'Guarantee / risk reversal', 'Urgency / scarcity element', 'Order form / Checkout CTA'],
+    tools: ['ThriveCart / Kajabi', 'Deadline Funnel', 'Shopify / WooCommerce']
+  }
+];
+
+const colorMap = {
+  purple: 'bg-purple-500/20 border-purple-500/30 text-purple-400',
+  blue: 'bg-blue-500/20 border-blue-500/30 text-blue-400',
+  orange: 'bg-orange-500/20 border-orange-500/30 text-orange-400',
+  teal: 'bg-teal-500/20 border-teal-500/30 text-teal-400',
+  green: 'bg-green-500/20 border-green-500/30 text-green-400',
+  red: 'bg-red-500/20 border-red-500/30 text-red-400',
+};
+
+let clientCardsRendered = false;
+
+function renderClientCards() {
+  if (clientCardsRendered) return;
+  clientCardsRendered = true;
+  const container = document.getElementById('client-cards');
+  clientData.forEach((c, i) => {
+    const div = document.createElement('div');
+    div.className = 'bg-[#162032] border border-[#1E3A5F] rounded-xl overflow-hidden hover:border-accent/30 transition-colors';
+    div.innerHTML = `
+      <button onclick="toggleCard(${i})" class="w-full flex items-center justify-between p-5 text-left">
+        <div class="flex items-center gap-4">
+          <div class="w-11 h-11 rounded-xl ${colorMap[c.color]} border flex items-center justify-center text-xl">${c.emoji}</div>
+          <div>
+            <div class="font-display font-bold text-white">${c.title}</div>
+            <div class="text-xs text-slate-500 mt-0.5">${c.subtitle}</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          ${c.tags.map(t => `<span class="pill hidden sm:inline bg-[#0F172A] text-slate-400 border border-[#1E3A5F]">${t}</span>`).join('')}
+          <svg id="chevron-${i}" class="w-5 h-5 text-slate-500 transition-transform shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </button>
+      <div id="card-expand-${i}" class="card-expand px-5">
+        <div class="border-t border-[#1E293B] pt-4 pb-5 grid md:grid-cols-3 gap-5">
+          <div>
+            <div class="text-xs text-accent font-bold uppercase tracking-wider mb-2">About This Client</div>
+            <p class="text-sm text-slate-400 leading-relaxed">${c.desc}</p>
+          </div>
+          <div>
+            <div class="text-xs text-accent font-bold uppercase tracking-wider mb-2">Primary Goals</div>
+            <ul class="space-y-1.5">${c.goals.map(g => `<li class="text-sm text-slate-300 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-accent shrink-0"></span>${g}</li>`).join('')}</ul>
+            <div class="text-xs text-accent font-bold uppercase tracking-wider mt-4 mb-2">Key Tools</div>
+            <ul class="space-y-1">${c.tools.map(t => `<li class="text-xs text-slate-400 font-mono">${t}</li>`).join('')}</ul>
+          </div>
+          <div>
+            <div class="text-xs text-accent font-bold uppercase tracking-wider mb-2">Recommended Page Sections</div>
+            <ol class="space-y-1.5">${c.sections.map((s, n) => `<li class="text-sm text-slate-300 flex items-start gap-2"><span class="font-mono text-accent text-xs mt-0.5 shrink-0">${String(n+1).padStart(2,'0')}</span>${s}</li>`).join('')}</ol>
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function toggleCard(i) {
+  const el = document.getElementById('card-expand-' + i);
+  const ch = document.getElementById('chevron-' + i);
+  el.classList.toggle('open');
+  ch.style.transform = el.classList.contains('open') ? 'rotate(180deg)' : '';
+}
+
+// =====================
+// Blueprint Generator — FIXED: 'ecommerce' key matches select value
+// =====================
+let selectedAudience = '';
+
+function setAudience(val) {
+  selectedAudience = val;
+  document.querySelectorAll('.audience-btn').forEach(b => {
+    b.classList.remove('border-accent', 'text-accent', 'bg-accent/10');
+    b.classList.add('border-[#1E3A5F]', 'text-slate-400');
+  });
+  const btn = document.getElementById('aud-' + val);
+  if (btn) {
+    btn.classList.remove('border-[#1E3A5F]', 'text-slate-400');
+    btn.classList.add('border-accent', 'text-accent', 'bg-accent/10');
+  }
+}
+
+// FIXED: all keys now match select option values; added full coverage for all type+goal combos
+const blueprintData = {
+  solopreneur: {
+    leads: ['🦸 Hero — Clear value prop + lead magnet above fold', '📖 About / Story — Build personal connection', '🎁 Lead Magnet CTA — Free guide / checklist optin', '⭐ Testimonials — 3–5 short social proof cards', '📰 Featured In — Media or podcast logos', '📧 Email Optin — Inline form with benefit copy', '🚀 Final CTA — Discovery call or free resource'],
+    booking: ['🦸 Hero — Bold promise + Book Call CTA', '📖 Credibility — Results, years, clients helped', '📋 How It Works — 3-step process', '🗣️ Client Wins — Video or written testimonials', '📅 Calendar Embed — Frictionless booking', '❓ FAQ — Address top objections', '🔒 Final CTA — Guarantee + book button'],
+    sales: ['🦸 Hero — Offer-focused with price/value anchor', '💎 What You Get — Visual breakdown of offer', '🗣️ Social Proof — Before/after transformations', '✅ Who This Is For — Qualify and pre-sell', '💰 Pricing — Clear, justified price with bonuses', '🔒 Risk Reversal — Guarantee section', '⚡ Order Form — Stripe/ThriveCart embed'],
+    awareness: ['🦸 Hero — Personal brand statement', '📖 About / Story — Your journey', '🏆 Featured In / Press logos', '📝 Content / Blog highlights', '🎁 Free Resource CTA', '📧 Newsletter optin'],
+    waitlist: ['🦸 Hero — Coming soon + optin form', '💡 What\'s coming — 3 key benefits', '⏰ Countdown timer', '🗣️ Early access perks', '📧 Email capture', '🔔 Notify me CTA'],
+  },
+  agency: {
+    leads: ['🦸 Hero — Niche + result claim + CTA', '🏆 Client Logos — Recognizable brands you serve', '📊 Results Ticker — Numbers (leads, ROI, clients)', '🔧 Services — 3–6 service cards with outcomes', '💼 Case Studies — 2–3 featured with metrics', '👥 Team — Human faces = trust', '📅 Discovery CTA — Book a strategy call'],
+    awareness: ['🦸 Hero — Bold brand statement', '🔧 Services Overview', '💼 Portfolio / Work showcase', '👥 About / Team culture', '🌟 Awards + Press mentions', '📝 Blog / Thought leadership', '📬 Contact / Connect CTA'],
+    booking: ['🦸 Hero — Offer + Discovery call CTA', '🏆 Client results / logos', '🔧 Services breakdown', '📋 How we work — process steps', '💼 Featured case study', '📅 Book a call — calendar embed', '❓ FAQ'],
+    sales: ['🦸 Hero — ROI-focused claim', '📊 Proof — Client metrics & results', '🔧 Services + pricing overview', '💼 Case studies', '🔒 Guarantee', '⚡ Buy / Retainer CTA'],
+    waitlist: ['🦸 Hero — Announcing new service + optin', '💡 What\'s launching', '🏆 Agency credibility', '📧 Early access form', '🔔 Launch date / Countdown'],
+  },
+  coach: {
+    booking: ['🦸 Hero — Transformation promise + apply CTA', '🎯 Who This Is For — Niche audience call-out', '📖 Coach Story — Relatability + credibility', '🗺️ Program Overview — What they get', '🏆 Client Transformations — Specific results', '📋 Application Form — Qualify leads', '🔒 Guarantee + Final CTA'],
+    leads: ['🦸 Hero — Lead magnet offer (checklist, mini-course)', '📋 Optin form — Name + email', '💡 What you\'ll learn — 3–5 bullets', '🗣️ Social proof — Optin count or quote', '📖 About coach — Credibility snippet', '🔒 Privacy assurance'],
+    sales: ['🦸 Hero — Program offer + buy CTA', '💎 What\'s included — Full breakdown', '🗣️ Client results — Specific transformations', '✅ Who it\'s for', '💰 Investment + payment options', '🔒 Guarantee', '⚡ Enroll now CTA'],
+    awareness: ['🦸 Hero — Coach brand statement', '📖 About / Story', '🎯 Who you help', '🏆 Credentials + press', '📝 Free content / podcast', '📧 Newsletter optin'],
+    waitlist: ['🦸 Hero — New program announcement + optin', '💡 Program highlights', '🏆 Coach credibility', '📧 Join waitlist form', '⏰ Enrollment opens date'],
+  },
+  saas: {
+    waitlist: ['🦸 Hero — Problem → solution + waitlist form', '🖥️ Product screenshot / GIF', '⭐ Key features (3)', '🔗 Integrations', '🗣️ Early adopter quotes', '🎁 Founding member perks', '📧 Final optin CTA'],
+    leads: ['🦸 Hero — Value prop + free trial CTA', '🖥️ Product demo / interactive tour', '⭐ Features (3–6 with icons)', '🔄 How it works (3 steps)', '💰 Pricing table', '❓ FAQ (8–10 questions)', '🚀 Final CTA — Start free trial'],
+    sales: ['🦸 Hero — ROI-focused claim + CTA', '📊 Social proof / case studies', '💰 Pricing (annual vs monthly)', '🔗 Integrations logos', '🔒 Security / compliance badges', '❓ FAQ', '⚡ Purchase CTA'],
+    booking: ['🦸 Hero — Book a demo CTA', '🖥️ Product overview', '⭐ Key benefits', '🗣️ Customer quotes', '📅 Demo calendar embed', '❓ FAQ'],
+    awareness: ['🦸 Hero — Product brand statement', '🖥️ Product screenshots', '⭐ Features overview', '🔗 Integrations', '📝 Blog / changelog', '📧 Newsletter / updates optin'],
+  },
+  local: {
+    booking: ['📍 Hero — Service + City + Call/Book CTA', '🔧 Services — List with icons', '⭐ Google Reviews — Star rating + quotes', '✅ Why Choose Us — 3–5 differentiators', '🗺️ Service Area Map', '📸 Photo gallery', '📞 Contact + Booking Form'],
+    leads: ['📍 Hero — Offer + Lead form above fold', '🔧 Services', '⭐ Reviews', '✅ Trust signals', '📞 Click-to-call CTA'],
+    sales: ['📍 Hero — Service + Price anchor + CTA', '💎 What\'s included', '⭐ Reviews + testimonials', '✅ Guarantee / warranty', '📞 Book / Buy CTA'],
+    awareness: ['📍 Hero — Business brand + location', '🔧 Services overview', '📸 Photo gallery', '⭐ Reviews', '🗺️ Map + service area', '📬 Contact info'],
+    waitlist: ['📍 Hero — New location / service coming soon', '🔔 Notify me form', '💡 What\'s coming', '⭐ Existing reviews / credibility', '📞 Contact for early booking'],
+  },
+  ecommerce: {
+    sales: ['🦸 Hero — Irresistible offer + buy now CTA', '💎 What You Get — Visual breakdown', '🗣️ Social Proof — Photos + names + transformations', '✅ For Who — Pre-qualify', '🚫 Objection Busting — FAQ style', '🔒 Guarantee — Bold, specific guarantee', '⚡ Urgency — Timer / limited spots', '💳 Order Form / Buy CTA'],
+    leads: ['🦸 Hero — Free offer optin', '📋 Lead capture form', '🎁 Bonus breakdown', '🗣️ Social proof', '🔒 Privacy + spam free', '🚀 Final CTA'],
+    booking: ['🦸 Hero — Schedule a demo / consultation CTA', '💎 Product overview', '🗣️ Customer reviews', '📅 Book a call / demo', '❓ FAQ', '🔒 Risk reversal'],
+    awareness: ['🦸 Hero — Brand statement + shop CTA', '🛍️ Featured products / collections', '⭐ Reviews / star ratings', '🎁 Special offer / discount', '📧 Email signup — discount incentive'],
+    waitlist: ['🦸 Hero — New product launch + early access', '💡 What\'s coming', '🗣️ Teasers + social proof', '⏰ Launch countdown', '📧 Notify me form', '🎁 Early bird offer'],
+  }
+};
+
+function generateBlueprint() {
+  const type = document.getElementById('bp-type').value;
+  const goal = document.getElementById('bp-goal').value;
+  const out = document.getElementById('blueprint-output');
+
+  if (!type || !goal) {
+    out.innerHTML = `<div class="text-center text-red-400 text-sm font-semibold p-8">Please select both a client type and a primary goal.</div>`;
+    return;
+  }
+
+  const typeData = blueprintData[type];
+  if (!typeData) {
+    out.innerHTML = `<div class="text-sm text-slate-400 text-center p-8">Client type not mapped yet.</div>`;
+    return;
+  }
+
+  // Use exact match first, then fall back to first available
+  const sections = typeData[goal] || Object.values(typeData)[0];
+  const usedGoal = typeData[goal] ? goal : Object.keys(typeData)[0];
+  const fallbackNote = !typeData[goal] ? `<div class="mb-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg px-4 py-2.5 text-xs text-yellow-400">⚠️ No exact match for this goal — showing closest blueprint (${usedGoal})</div>` : '';
+
+  const audienceNote = {
+    cold: '⚠️ Cold traffic: Focus on education + trust. Lead with story before offer.',
+    warm: '🟡 Warm audience: Skip long intro, go straight to offer and proof.',
+    hot: '🟢 Hot / ready: Minimal friction. Straight to pricing or booking.'
+  }[selectedAudience] || '';
+
+  out.innerHTML = `
+    <div class="w-full">
+      <div class="flex items-center justify-between mb-4">
+        <div class="font-display font-bold text-white text-sm">Generated Blueprint</div>
+        <span class="pill bg-accent/20 text-accent">${sections.length} sections</span>
+      </div>
+      ${fallbackNote}
+      ${audienceNote ? `<div class="mb-4 bg-[#0F172A] rounded-lg px-4 py-2.5 text-xs text-slate-300">${audienceNote}</div>` : ''}
+      <div class="space-y-2">
+        ${sections.map((s, i) => `
+          <div class="blueprint-bar bg-[#0F172A] border border-[#1E3A5F] hover:border-accent/40 transition-colors">
+            <span class="font-mono text-accent text-xs mr-3 opacity-60">${String(i+1).padStart(2,'0')}</span>
+            <span class="text-sm text-slate-300">${s}</span>
+          </div>
+        `).join('')}
+      </div>
+      <button onclick="copyText(${JSON.stringify(sections.join('\n'))})" class="mt-4 w-full text-xs text-accent border border-accent/30 hover:bg-accent/10 rounded-lg py-2 transition-colors font-semibold">Copy blueprint as text</button>
+    </div>
+  `;
+}
+
+// =====================
+// Templates — FIXED: tab state management, copyCode uses direct query
+// =====================
+const templates = {
+  hero: {
+    label: 'High-Converting Hero Section',
+    desc: 'Full-width hero with headline, subheadline, CTA buttons, and social proof bar.',
+    code: `<!-- HERO SECTION -->
+<section class="min-h-screen flex items-center bg-slate-950 px-6">
+  <div class="max-w-4xl mx-auto text-center">
+    <!-- Eyebrow label -->
+    <div class="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30
+                text-emerald-400 text-sm font-semibold px-4 py-1.5 rounded-full mb-6">
+      ✦ Trusted by 500+ coaches & founders
+    </div>
+    <!-- Main headline -->
+    <h1 class="text-5xl md:text-7xl font-bold text-white leading-tight mb-6">
+      Scale Your Business<br>
+      <span class="text-emerald-400">Without Burning Out</span>
+    </h1>
+    <!-- Subheadline -->
+    <p class="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed mb-10">
+      We build high-converting marketing sites for coaches, consultants, and
+      agency owners who want more clients — not more work.
+    </p>
+    <!-- CTA Buttons -->
+    <div class="flex flex-col sm:flex-row gap-4 justify-center mb-14">
+      <a href="#contact" class="bg-emerald-500 hover:bg-emerald-400 text-slate-900
+                                font-bold text-lg px-8 py-4 rounded-xl transition-colors
+                                shadow-lg shadow-emerald-500/25">
+        Book My Free Strategy Call →
+      </a>
+      <a href="#work" class="border border-slate-700 hover:border-slate-500
+                             text-slate-300 hover:text-white font-semibold text-lg
+                             px-8 py-4 rounded-xl transition-colors">
+        See Our Work
+      </a>
+    </div>
+    <!-- Social proof bar -->
+    <div class="flex flex-wrap items-center justify-center gap-6 text-slate-500 text-sm">
+      <div class="flex items-center gap-2">
+        <div class="flex -space-x-2">
+          <div class="w-8 h-8 rounded-full bg-slate-700 border-2 border-slate-950"></div>
+          <div class="w-8 h-8 rounded-full bg-slate-600 border-2 border-slate-950"></div>
+          <div class="w-8 h-8 rounded-full bg-slate-500 border-2 border-slate-950"></div>
+        </div>
+        <span>500+ happy clients</span>
+      </div>
+      <div>★★★★★ <span>4.9/5 rating</span></div>
+      <div>🏆 <span>Award-winning design</span></div>
+    </div>
+  </div>
+</section>`
+  },
+  services: {
+    label: 'Services / Offer Section',
+    desc: 'Clean card-based services grid with icons, titles, and descriptions.',
+    code: `<!-- SERVICES SECTION -->
+<section class="py-24 px-6 bg-slate-900">
+  <div class="max-w-5xl mx-auto">
+    <div class="text-center mb-16">
+      <div class="text-emerald-400 text-sm font-bold uppercase tracking-widest mb-3">What We Do</div>
+      <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">Everything You Need to Grow</h2>
+      <p class="text-slate-400 text-lg max-w-2xl mx-auto">
+        We handle the full funnel — from positioning to launch — so you can focus on serving clients.
+      </p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-6
+                  hover:border-emerald-500/50 hover:bg-slate-800 transition-all group">
+        <div class="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center
+                    justify-center text-2xl mb-5 group-hover:scale-110 transition-transform">
+          🎯
+        </div>
+        <h3 class="text-xl font-bold text-white mb-3">Strategy & Positioning</h3>
+        <p class="text-slate-400 text-sm leading-relaxed">
+          We identify your unique angle and craft messaging that speaks directly
+          to your ideal clients — cutting through the noise.
+        </p>
+        <div class="mt-5 pt-5 border-t border-slate-700">
+          <div class="text-emerald-400 text-sm font-semibold">Starting at $1,200</div>
+        </div>
+      </div>
+      <div class="bg-slate-800/50 border border-emerald-500/40 rounded-2xl p-6
+                  hover:border-emerald-500 hover:bg-slate-800 transition-all group relative">
+        <div class="absolute -top-3 left-6">
+          <span class="bg-emerald-500 text-slate-900 text-xs font-bold px-3 py-1 rounded-full">Most Popular</span>
+        </div>
+        <div class="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center
+                    justify-center text-2xl mb-5 group-hover:scale-110 transition-transform">
+          🚀
+        </div>
+        <h3 class="text-xl font-bold text-white mb-3">Full Website Build</h3>
+        <p class="text-slate-400 text-sm leading-relaxed">
+          High-converting, blazing-fast marketing site built from scratch.
+          Includes copywriting, design, SEO, and launch support.
+        </p>
+        <div class="mt-5 pt-5 border-t border-slate-700">
+          <div class="text-emerald-400 text-sm font-semibold">Starting at $3,500</div>
+        </div>
+      </div>
+      <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-6
+                  hover:border-emerald-500/50 hover:bg-slate-800 transition-all group">
+        <div class="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center
+                    justify-center text-2xl mb-5 group-hover:scale-110 transition-transform">
+          ⚡
+        </div>
+        <h3 class="text-xl font-bold text-white mb-3">CRO & Optimization</h3>
+        <p class="text-slate-400 text-sm leading-relaxed">
+          We analyze, test, and optimize your existing pages to increase
+          conversions — without rebuilding from scratch.
+        </p>
+        <div class="mt-5 pt-5 border-t border-slate-700">
+          <div class="text-emerald-400 text-sm font-semibold">Starting at $800</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>`
+  },
+  social: {
+    label: 'Trust & Social Proof Section',
+    desc: 'Testimonials grid with client photos, names, results, and stats bar.',
+    code: `<!-- SOCIAL PROOF SECTION -->
+<section class="py-24 px-6 bg-slate-950">
+  <div class="max-w-5xl mx-auto">
+    <div class="text-center mb-16">
+      <div class="text-emerald-400 text-sm font-bold uppercase tracking-widest mb-3">Real Results</div>
+      <h2 class="text-4xl font-bold text-white">What Our Clients Say</h2>
+    </div>
+    <div class="grid md:grid-cols-3 gap-6 mb-16">
+      <div class="bg-slate-800/40 border border-slate-700 rounded-2xl p-6">
+        <div class="flex text-yellow-400 text-sm mb-4">★★★★★</div>
+        <p class="text-slate-300 text-sm leading-relaxed mb-6">
+          "Our inbound leads went from 3/month to 28/month within 60 days
+          of the new site going live. The ROI has been incredible."
+        </p>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-slate-600 flex items-center justify-center text-sm font-bold text-white">SC</div>
+          <div>
+            <div class="text-white text-sm font-semibold">Sarah Chen</div>
+            <div class="text-slate-500 text-xs">Fitness Coach · @sarahfits</div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-slate-800/40 border border-emerald-500/30 rounded-2xl p-6">
+        <div class="flex text-yellow-400 text-sm mb-4">★★★★★</div>
+        <p class="text-slate-300 text-sm leading-relaxed mb-6">
+          "Went from $5k/mo to $22k/mo in 4 months. The website finally
+          reflects the quality of work we do. Worth every penny."
+        </p>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold text-white">MR</div>
+          <div>
+            <div class="text-white text-sm font-semibold">Marcus Rivera</div>
+            <div class="text-slate-500 text-xs">Business Coach · Rivera Results</div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-slate-800/40 border border-slate-700 rounded-2xl p-6">
+        <div class="flex text-yellow-400 text-sm mb-4">★★★★★</div>
+        <p class="text-slate-300 text-sm leading-relaxed mb-6">
+          "The new site generates 40-50 qualified leads per week. Our
+          close rate improved because the leads now come in pre-sold."
+        </p>
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-sm font-bold text-white">AK</div>
+          <div>
+            <div class="text-white text-sm font-semibold">Apex Marketing</div>
+            <div class="text-slate-500 text-xs">Marketing Agency · apexmktg.co</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 p-8 bg-slate-800/30 border border-slate-700 rounded-2xl">
+      <div class="text-center"><div class="text-4xl font-bold text-emerald-400 mb-1">500+</div><div class="text-slate-400 text-sm">Sites Launched</div></div>
+      <div class="text-center"><div class="text-4xl font-bold text-emerald-400 mb-1">$12M</div><div class="text-slate-400 text-sm">Revenue Generated</div></div>
+      <div class="text-center"><div class="text-4xl font-bold text-emerald-400 mb-1">94%</div><div class="text-slate-400 text-sm">Client Retention</div></div>
+      <div class="text-center"><div class="text-4xl font-bold text-emerald-400 mb-1">48h</div><div class="text-slate-400 text-sm">Avg. Response Time</div></div>
+    </div>
+  </div>
+</section>`
+  },
+  pricing: {
+    label: 'Pricing Table',
+    desc: 'Three-tier pricing with a featured/popular column, features list, and CTAs.',
+    code: `<!-- PRICING SECTION -->
+<section class="py-24 px-6 bg-slate-900">
+  <div class="max-w-5xl mx-auto">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl font-bold text-white mb-4">Simple, Transparent Pricing</h2>
+      <p class="text-slate-400 text-lg">No hidden fees. No surprises. Just results.</p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-6">
+      <!-- Starter -->
+      <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-8">
+        <div class="text-slate-400 text-sm font-bold uppercase tracking-wider mb-2">Starter</div>
+        <div class="text-4xl font-bold text-white mb-1">$1,200</div>
+        <div class="text-slate-500 text-sm mb-6">One-time · 1-week delivery</div>
+        <ul class="space-y-3 mb-8">
+          <li class="flex items-center gap-2 text-sm text-slate-300"><span class="text-emerald-400">✓</span> 1-page landing page</li>
+          <li class="flex items-center gap-2 text-sm text-slate-300"><span class="text-emerald-400">✓</span> Mobile responsive</li>
+          <li class="flex items-center gap-2 text-sm text-slate-300"><span class="text-emerald-400">✓</span> Lead capture form</li>
+          <li class="flex items-center gap-2 text-sm text-slate-300"><span class="text-emerald-400">✓</span> Basic SEO setup</li>
+          <li class="flex items-center gap-2 text-sm text-slate-500"><span>–</span> Copywriting</li>
+          <li class="flex items-center gap-2 text-sm text-slate-500"><span>–</span> A/B testing</li>
+        </ul>
+        <a href="#contact" class="block text-center border border-slate-600 hover:border-emerald-500 hover:text-emerald-400 text-slate-300 font-semibold py-3 rounded-xl transition-colors">Get Started</a>
+      </div>
+      <!-- Pro (featured) -->
+      <div class="bg-emerald-500 rounded-2xl p-8 relative shadow-xl shadow-emerald-500/20">
+        <div class="absolute -top-3 left-1/2 -translate-x-1/2">
+          <span class="bg-slate-900 text-emerald-400 text-xs font-bold px-4 py-1.5 rounded-full border border-emerald-500/30">Most Popular</span>
+        </div>
+        <div class="text-slate-900 text-sm font-bold uppercase tracking-wider mb-2">Pro</div>
+        <div class="text-4xl font-bold text-slate-900 mb-1">$3,500</div>
+        <div class="text-slate-700 text-sm mb-6">One-time · 2-week delivery</div>
+        <ul class="space-y-3 mb-8">
+          <li class="flex items-center gap-2 text-sm text-slate-900 font-medium"><span class="font-bold">✓</span> Full multi-page website</li>
+          <li class="flex items-center gap-2 text-sm text-slate-900 font-medium"><span class="font-bold">✓</span> Professional copywriting</li>
+          <li class="flex items-center gap-2 text-sm text-slate-900 font-medium"><span class="font-bold">✓</span> Email integration</li>
+          <li class="flex items-center gap-2 text-sm text-slate-900 font-medium"><span class="font-bold">✓</span> Full SEO optimization</li>
+          <li class="flex items-center gap-2 text-sm text-slate-900 font-medium"><span class="font-bold">✓</span> Analytics setup</li>
+          <li class="flex items-center gap-2 text-sm text-slate-900 font-medium"><span class="font-bold">✓</span> 30-day support</li>
+        </ul>
+        <a href="#contact" class="block text-center bg-slate-900 hover:bg-slate-800 text-emerald-400 font-bold py-3 rounded-xl transition-colors">Start Project →</a>
+      </div>
+      <!-- Agency -->
+      <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-8">
+        <div class="text-slate-400 text-sm font-bold uppercase tracking-wider mb-2">Agency</div>
+        <div class="text-4xl font-bold text-white mb-1">Custom</div>
+        <div class="text-slate-500 text-sm mb-6">Retainer or project basis</div>
+        <ul class="space-y-3 mb-8">
+          <li class="flex items-center gap-2 text-sm text-slate-300"><span class="text-emerald-400">✓</span> Everything in Pro</li>
+          <li class="flex items-center gap-2 text-sm text-slate-300"><span class="text-emerald-400">✓</span> White-label delivery</li>
+          <li class="flex items-center gap-2 text-sm text-slate-300"><span class="text-emerald-400">✓</span> Priority turnaround</li>
+          <li class="flex items-center gap-2 text-sm text-slate-300"><span class="text-emerald-400">✓</span> Dedicated Slack channel</li>
+          <li class="flex items-center gap-2 text-sm text-slate-300"><span class="text-emerald-400">✓</span> A/B testing included</li>
+          <li class="flex items-center gap-2 text-sm text-slate-300"><span class="text-emerald-400">✓</span> Quarterly CRO review</li>
+        </ul>
+        <a href="#contact" class="block text-center border border-slate-600 hover:border-emerald-500 hover:text-emerald-400 text-slate-300 font-semibold py-3 rounded-xl transition-colors">Let's Talk</a>
+      </div>
+    </div>
+  </div>
+</section>`
+  },
+  faq: {
+    label: 'FAQ Section (Alpine.js)',
+    desc: 'Accessible accordion FAQ using Alpine.js for zero-JS-bundle interactivity.',
+    code: `<!-- FAQ SECTION (requires Alpine.js) -->
+<!-- Add to <head>: <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script> -->
+<section class="py-24 px-6 bg-slate-950">
+  <div class="max-w-3xl mx-auto">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl font-bold text-white mb-4">Frequently Asked Questions</h2>
+      <p class="text-slate-400">Everything you need to know before getting started.</p>
+    </div>
+    <div x-data="{ open: null }" class="space-y-3">
+      <div class="border border-slate-700 rounded-xl overflow-hidden hover:border-slate-600 transition-colors">
+        <button @click="open === 1 ? open = null : open = 1" class="w-full flex items-center justify-between p-6 text-left">
+          <span class="font-semibold text-white">How long does a project take?</span>
+          <svg :class="open === 1 ? 'rotate-180' : ''" class="w-5 h-5 text-slate-400 transition-transform shrink-0 ml-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div x-show="open === 1" x-transition class="px-6 pb-6">
+          <p class="text-slate-400 text-sm leading-relaxed">Most single-page projects take 5–7 business days. Full multi-page websites are delivered in 10–14 days. Rush delivery available at an additional fee.</p>
+        </div>
+      </div>
+      <div class="border border-slate-700 rounded-xl overflow-hidden hover:border-slate-600 transition-colors">
+        <button @click="open === 2 ? open = null : open = 2" class="w-full flex items-center justify-between p-6 text-left">
+          <span class="font-semibold text-white">Do I need to provide copy/content?</span>
+          <svg :class="open === 2 ? 'rotate-180' : ''" class="w-5 h-5 text-slate-400 transition-transform shrink-0 ml-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div x-show="open === 2" x-transition class="px-6 pb-6">
+          <p class="text-slate-400 text-sm leading-relaxed">For Pro and Agency plans, we handle all copywriting. We'll send you a short intake form (15 minutes) to gather what we need.</p>
+        </div>
+      </div>
+      <div class="border border-slate-700 rounded-xl overflow-hidden hover:border-slate-600 transition-colors">
+        <button @click="open === 3 ? open = null : open = 3" class="w-full flex items-center justify-between p-6 text-left">
+          <span class="font-semibold text-white">What if I'm not happy with the result?</span>
+          <svg :class="open === 3 ? 'rotate-180' : ''" class="w-5 h-5 text-slate-400 transition-transform shrink-0 ml-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div x-show="open === 3" x-transition class="px-6 pb-6">
+          <p class="text-slate-400 text-sm leading-relaxed">We offer unlimited revisions during the project and a 14-day revision window after delivery. If you're genuinely unhappy, we'll refund 100% — no questions asked.</p>
+        </div>
+      </div>
+      <div class="border border-slate-700 rounded-xl overflow-hidden hover:border-slate-600 transition-colors">
+        <button @click="open === 4 ? open = null : open = 4" class="w-full flex items-center justify-between p-6 text-left">
+          <span class="font-semibold text-white">Do you offer ongoing maintenance?</span>
+          <svg :class="open === 4 ? 'rotate-180' : ''" class="w-5 h-5 text-slate-400 transition-transform shrink-0 ml-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div x-show="open === 4" x-transition class="px-6 pb-6">
+          <p class="text-slate-400 text-sm leading-relaxed">Yes! Our monthly care plans start at $149/mo and include updates, speed monitoring, security checks, and priority support.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>`
+  },
+  cta: {
+    label: 'Final CTA Section',
+    desc: 'Full-width closing call-to-action with urgency, risk reversal, and guarantee.',
+    code: `<!-- FINAL CTA SECTION -->
+<section class="py-24 px-6 bg-emerald-500 relative overflow-hidden">
+  <div class="absolute inset-0 opacity-10">
+    <div class="absolute top-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
+    <div class="absolute bottom-0 left-0 w-64 h-64 bg-emerald-900 rounded-full -translate-x-1/2 translate-y-1/2 blur-3xl"></div>
+  </div>
+  <div class="max-w-3xl mx-auto text-center relative">
+    <div class="inline-flex items-center gap-2 bg-emerald-600/50 text-white text-sm font-bold px-4 py-1.5 rounded-full mb-6 border border-white/20">
+      ⚡ Only 3 spots left for June
+    </div>
+    <h2 class="text-4xl md:text-5xl font-bold text-slate-900 mb-6 leading-tight">
+      Ready to Finally Have a Website That Works as Hard as You Do?
+    </h2>
+    <p class="text-slate-800 text-lg mb-10 leading-relaxed max-w-2xl mx-auto">
+      Book a free 30-minute strategy call. We'll review your current site,
+      identify the biggest conversion leaks, and build a custom roadmap —
+      with zero pressure to buy.
+    </p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center mb-10">
+      <a href="#book" class="bg-slate-900 hover:bg-slate-800 text-emerald-400 font-bold text-lg px-10 py-5 rounded-xl transition-colors shadow-xl">
+        Book My Free Strategy Call →
+      </a>
+    </div>
+    <div class="flex flex-wrap justify-center gap-6 text-slate-800 text-sm">
+      <div class="flex items-center gap-2"><span>🔒</span> No commitment required</div>
+      <div class="flex items-center gap-2"><span>✅</span> 100% money-back guarantee</div>
+      <div class="flex items-center gap-2"><span>⚡</span> Results in 14 days or less</div>
+    </div>
+  </div>
+</section>`
+  }
+};
+
+// FIXED: proper tab state management using 'tab-active' class
+function updateTemplateTabs(activeTab) {
+  document.querySelectorAll('.template-tab').forEach(t => {
+    const isActive = t.dataset.tab === activeTab;
+    t.classList.toggle('tab-active', isActive);
+    t.classList.toggle('border-accent', isActive);
+    t.classList.toggle('bg-accent/10', isActive);
+    t.classList.toggle('text-accent', isActive);
+    t.classList.toggle('border-[#1E3A5F]', !isActive);
+    t.classList.toggle('text-slate-400', !isActive);
+  });
+}
+
+function setTemplateTab(tab) {
+  updateTemplateTabs(tab);
+  renderTemplateContent(tab);
+}
+
+function escapeHTML(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// FIXED: Copy button uses a dedicated data attribute to pass template key
+function renderTemplateContent(tab) {
+  const t = templates[tab];
+  if (!t) return;
+  const container = document.getElementById('template-content');
+  if (!container) return;
+  container.innerHTML = `
+    <div class="bg-[#162032] border border-[#1E3A5F] rounded-xl overflow-hidden">
+      <div class="p-5 border-b border-[#1E293B] flex items-center justify-between gap-4">
+        <div class="min-w-0">
+          <div class="font-display font-bold text-white">${t.label}</div>
+          <div class="text-xs text-slate-500 mt-0.5">${t.desc}</div>
+        </div>
+        <button data-copy-tab="${tab}" onclick="copyTemplateCode(this)" class="bg-accent text-slate-900 font-bold text-xs px-4 py-2 rounded-lg hover:bg-[#34D399] transition-colors flex items-center gap-1.5 shrink-0">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Copy Code
+        </button>
+      </div>
+      <pre class="p-5 text-xs leading-relaxed overflow-x-auto" style="background:#0F172A"><code class="text-slate-300">${escapeHTML(t.code)}</code></pre>
+    </div>
+  `;
+}
+
+// FIXED: copy code using the data attribute to look up the raw (unescaped) template string
+function copyTemplateCode(btn) {
+  const tab = btn.dataset.copyTab;
+  if (tab && templates[tab]) {
+    copyText(templates[tab].code);
+  }
+}
+
+// =====================
+// Export templates
+// =====================
+const exportTemplates = {
+  coach: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[Coach Name] — [Your Tagline]</title>
+  <script src="https://cdn.tailwindcss.com"><\/script>
+</head>
+<body class="bg-slate-950 text-slate-200">
+  <nav class="fixed top-0 w-full bg-slate-950/80 backdrop-blur border-b border-slate-800 z-50 px-6 py-4 flex justify-between items-center">
+    <div class="font-bold text-white">[Coach Name]</div>
+    <a href="#booking" class="bg-emerald-500 text-slate-900 font-bold px-5 py-2 rounded-lg text-sm">Book Free Call</a>
+  </nav>
+  <section class="min-h-screen flex items-center pt-16 px-6">
+    <div class="max-w-4xl mx-auto text-center">
+      <h1 class="text-6xl font-bold text-white mb-6">[Transformation Promise]</h1>
+      <p class="text-xl text-slate-400 mb-8 max-w-2xl mx-auto">[Subheadline — who you help, how, outcome]</p>
+      <a href="#booking" class="bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold text-lg px-8 py-4 rounded-xl">Book My Free Strategy Call →</a>
+    </div>
+  </section>
+  <!-- ADD MORE SECTIONS HERE: About, Offer, Testimonials, Booking, FAQ, CTA -->
+</body>
+</html>`,
+  saas: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[Product Name] — [One-Line Value Prop]</title>
+  <script src="https://cdn.tailwindcss.com"><\/script>
+</head>
+<body class="bg-slate-950 text-slate-200">
+  <section class="min-h-screen flex items-center px-6 text-center">
+    <div class="max-w-4xl mx-auto">
+      <div class="inline-block bg-blue-500/10 text-blue-400 border border-blue-500/30 px-4 py-1.5 rounded-full text-sm font-semibold mb-6">Now in Beta — Join Waitlist</div>
+      <h1 class="text-6xl font-bold text-white mb-6">[Product headline]</h1>
+      <p class="text-xl text-slate-400 mb-8">[Problem → solution subheadline]</p>
+      <form class="flex gap-3 max-w-md mx-auto">
+        <input type="email" placeholder="Enter your email" class="flex-1 bg-slate-800 border border-slate-700 text-white px-4 py-3 rounded-xl focus:outline-none focus:border-blue-500">
+        <button type="submit" class="bg-blue-500 hover:bg-blue-400 text-white font-bold px-6 py-3 rounded-xl">Join Waitlist</button>
+      </form>
+    </div>
+  </section>
+  <!-- ADD: Features, How It Works, Pricing, FAQ, Final CTA -->
+</body>
+</html>`,
+  agency: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[Agency Name] — [Niche] Marketing Agency</title>
+  <script src="https://cdn.tailwindcss.com"><\/script>
+</head>
+<body class="bg-slate-950 text-slate-200">
+  <section class="min-h-screen flex items-center px-6">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-emerald-400 text-sm font-bold uppercase tracking-widest mb-4">Award-Winning Growth Agency</div>
+      <h1 class="text-7xl font-bold text-white mb-6 leading-tight">We Build Brands<br>That Convert</h1>
+      <p class="text-xl text-slate-400 mb-8 max-w-2xl">Specialized in high-converting websites and growth funnels for [niche]. Trusted by [number]+ businesses.</p>
+      <div class="flex gap-4">
+        <a href="#work" class="bg-emerald-500 text-slate-900 font-bold px-8 py-4 rounded-xl">See Our Work</a>
+        <a href="#contact" class="border border-slate-700 text-slate-300 font-semibold px-8 py-4 rounded-xl">Book Discovery Call</a>
+      </div>
+    </div>
+  </section>
+  <!-- ADD: Client logos, Services, Case studies, Team, Contact -->
+</body>
+</html>`,
+  local: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[Service] in [City] — [Business Name]</title>
+  <script src="https://cdn.tailwindcss.com"><\/script>
+</head>
+<body class="bg-white text-slate-900">
+  <header class="bg-blue-700 text-white px-6 py-4 flex justify-between items-center">
+    <div class="font-bold text-xl">[Business Name]</div>
+    <a href="tel:+1234567890" class="bg-white text-blue-700 font-bold px-5 py-2 rounded-lg">(123) 456-7890</a>
+  </header>
+  <section class="py-20 px-6 bg-gradient-to-br from-blue-700 to-blue-900 text-white text-center">
+    <h1 class="text-5xl font-bold mb-4">[Service] in [City]</h1>
+    <p class="text-xl text-blue-200 mb-8">[Tagline with benefit + local trust signal]</p>
+    <a href="tel:+1234567890" class="bg-yellow-400 text-slate-900 font-bold text-xl px-10 py-5 rounded-xl">Call Now — Free Estimate</a>
+  </section>
+  <!-- ADD: Services, Reviews, Why Us, Map, Contact form -->
+</body>
+</html>`,
+  offer: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[Offer Name] — [Outcome Promise]</title>
+  <script src="https://cdn.tailwindcss.com"><\/script>
+</head>
+<body class="bg-slate-950 text-slate-200">
+  <section class="py-20 px-6 text-center bg-gradient-to-b from-slate-900 to-slate-950">
+    <div class="text-red-400 font-bold text-sm uppercase tracking-widest mb-4">Limited Time Offer — Only 10 Spots</div>
+    <h1 class="text-5xl md:text-6xl font-bold text-white mb-6 max-w-4xl mx-auto leading-tight">
+      [Irresistible Headline That Promises Transformation]
+    </h1>
+    <p class="text-xl text-slate-400 mb-8 max-w-2xl mx-auto">[Subheadline with specifics — who, what, timeframe, guarantee]</p>
+    <a href="#order" class="bg-red-500 hover:bg-red-400 text-white font-bold text-xl px-10 py-5 rounded-xl shadow-xl">YES! I Want This Now →</a>
+    <div class="mt-4 text-slate-500 text-sm">🔒 Secure checkout · 30-day money-back guarantee</div>
+  </section>
+  <!-- ADD: What you get, Social proof, Objections, Guarantee, Order form -->
+</body>
+</html>`,
+  blank: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page Title</title>
+  <meta name="description" content="Page description (150-160 chars)">
+  <script src="https://cdn.tailwindcss.com"><\/script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"><\/script>
+</head>
+<body class="bg-slate-950 text-slate-200">
+
+  <!-- NAVIGATION -->
+  <nav class="fixed top-0 w-full z-50 bg-slate-950/80 backdrop-blur border-b border-slate-800 px-6 py-4">
+    <!-- Logo | Links | CTA -->
+  </nav>
+
+  <!-- HERO SECTION -->
+  <section class="min-h-screen flex items-center px-6 pt-16">
+    <!-- Eyebrow | H1 | Subheadline | CTA | Social proof -->
+  </section>
+
+  <!-- SECTION 2: [Features / Services / About] -->
+  <section class="py-24 px-6">
+  </section>
+
+  <!-- SECTION 3: [Social Proof / Testimonials] -->
+  <section class="py-24 px-6">
+  </section>
+
+  <!-- SECTION 4: [Offer / Pricing] -->
+  <section class="py-24 px-6">
+  </section>
+
+  <!-- SECTION 5: [FAQ] -->
+  <section class="py-24 px-6">
+  </section>
+
+  <!-- FINAL CTA SECTION -->
+  <section class="py-24 px-6">
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-800 px-6 py-8 text-center text-slate-500 text-sm">
+    © 2025 [Business Name]. All rights reserved.
+    <div class="mt-2">
+      <a href="/privacy" class="hover:text-white">Privacy</a> ·
+      <a href="/terms" class="hover:text-white">Terms</a>
+    </div>
+  </footer>
+
+</body>
+</html>`
+};
+
+function exportTemplate(type) {
+  const code = exportTemplates[type] || exportTemplates.blank;
+  copyText(code);
+}
+
+// =====================
+// Initialize on DOM ready
+// =====================
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize template tabs with 'hero' active
+  updateTemplateTabs('hero');
+  // Render hero template content (it's hidden but will be ready when user navigates)
+  renderTemplateContent('hero');
+});
+</script>
+</body>
+</html>
